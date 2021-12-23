@@ -30,7 +30,6 @@ static UA_STRING: &str = "Rust-Geocoding";
 use chrono;
 pub use geo_types::{Coordinate, Point};
 use num_traits::Float;
-use reqwest::blocking::Client;
 use reqwest::header::ToStrError;
 use reqwest::header::{HeaderMap, HeaderValue, USER_AGENT};
 use serde::de::DeserializeOwned;
@@ -38,17 +37,23 @@ use serde::{Deserialize, Serialize};
 use std::num::ParseIntError;
 use thiserror::Error;
 
+#[cfg(feature = "blocking")]
+pub mod blocking;
+
 // The OpenCage geocoding provider
 pub mod opencage;
-pub use crate::opencage::Opencage;
+#[cfg(feature = "blocking")]
+pub use crate::blocking::opencage::Opencage;
 
 // The OpenStreetMap Nominatim geocoding provider
 pub mod openstreetmap;
-pub use crate::openstreetmap::Openstreetmap;
+#[cfg(feature = "blocking")]
+pub use crate::blocking::openstreetmap::Openstreetmap;
 
 // The GeoAdmin geocoding provider
 pub mod geoadmin;
-pub use crate::geoadmin::GeoAdmin;
+#[cfg(feature = "blocking")]
+pub use crate::blocking::geoadmin::GeoAdmin;
 
 /// Errors that can occur during geocoding operations
 #[derive(Error, Debug)]
@@ -63,62 +68,6 @@ pub enum GeocodingError {
     HeaderConversion(#[from] ToStrError),
     #[error("Error converting int to String")]
     ParseInt(#[from] ParseIntError),
-}
-
-/// Reverse-geocode a coordinate.
-///
-/// This trait represents the most simple and minimal implementation
-/// available from a given geocoding provider: some address formatted as Option<String>.
-///
-/// Examples
-///
-/// ```
-/// use geocoding::{Opencage, Point, Reverse};
-///
-/// let p = Point::new(2.12870, 41.40139);
-/// let oc = Opencage::new("dcdbf0d783374909b3debee728c7cc10".to_string());
-/// let res = oc.reverse(&p).unwrap();
-/// assert_eq!(
-///     res,
-///     Some("Carrer de Calatrava, 68, 08017 Barcelona, Spain".to_string())
-/// );
-/// ```
-pub trait Reverse<T>
-where
-    T: Float,
-{
-    // NOTE TO IMPLEMENTERS: Point coordinates are lon, lat (x, y)
-    // You may have to provide these coordinates in reverse order,
-    // depending on the provider's requirements (see e.g. OpenCage)
-    fn reverse(&self, point: &Point<T>) -> Result<Option<String>, GeocodingError>;
-}
-
-/// Forward-geocode a coordinate.
-///
-/// This trait represents the most simple and minimal implementation available
-/// from a given geocoding provider: It returns a `Vec` of zero or more `Points`.
-///
-/// Examples
-///
-/// ```
-/// use geocoding::{Coordinate, Forward, Opencage, Point};
-///
-/// let oc = Opencage::new("dcdbf0d783374909b3debee728c7cc10".to_string());
-/// let address = "Schwabing, München";
-/// let res: Vec<Point<f64>> = oc.forward(address).unwrap();
-/// assert_eq!(
-///     res,
-///     vec![Point(Coordinate { x: 11.5884858, y: 48.1700887 })]
-/// );
-/// ```
-pub trait Forward<T>
-where
-    T: Float,
-{
-    // NOTE TO IMPLEMENTERS: while returned provider point data may not be in
-    // lon, lat (x, y) order, Geocoding requires this order in its output Point
-    // data. Please pay attention when using returned data to construct Points
-    fn forward(&self, address: &str) -> Result<Vec<Point<T>>, GeocodingError>;
 }
 
 /// Used to specify a bounding box to search within when forward-geocoding
