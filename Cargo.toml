@@ -15,10 +15,16 @@ geo-types = "0.6"
 num-traits = "0.2"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-reqwest = { version = "0.11", default-features = false, features = ["default-tls", "blocking", "json"] }
+reqwest = { version = "0.11", default-features = false, features = ["default-tls", "json"] }
 hyper = "0.14.11"
 chrono = { version = "0.4", features = ["serde"] }
+async-trait = {version = "0.1.52", optional = true}
+
+[dev-dependencies]
+tokio = {version = "1.15", features = ["macros"]}
 
 [features]
-default = ["reqwest/default"]
+default = ["reqwest/default", "blocking"]
+blocking = ["reqwest/blocking"]
 rustls-tls = ["reqwest/rustls-tls"]
+async = ["async-trait"]
