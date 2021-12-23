@@ -37,6 +37,8 @@ use serde::{Deserialize, Serialize};
 use std::num::ParseIntError;
 use thiserror::Error;
 
+#[cfg(feature = "async")]
+pub mod async_impl;
 #[cfg(feature = "blocking")]
 pub mod blocking;
 
