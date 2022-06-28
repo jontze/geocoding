@@ -31,20 +31,30 @@ use chrono;
 pub use geo_types::{Coordinate, Point};
 use num_traits::Float;
 use reqwest::blocking::Client;
-use reqwest::header::ToStrError;
 use reqwest::header::{HeaderMap, HeaderValue, USER_AGENT};
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use std::fmt::Debug;
-use std::num::ParseIntError;
-use thiserror::Error;
+
+#[cfg(feature = "async_impl")]
+pub mod async_impl;
+
+#[cfg(feature = "blocking")]
+pub mod blocking;
+#[cfg(feature = "blocking")]
+pub use blocking::Forward;
+#[cfg(feature = "blocking")]
+pub use blocking::Reverse;
+
+mod shared;
 
 // The OpenCage geocoding provider
 pub mod opencage;
 pub use crate::opencage::Opencage;
 
 // The OpenStreetMap Nominatim geocoding provider
-pub mod openstreetmap;
+#[cfg(feature = "blocking")]
+pub use blocking::openstreetmap;
 pub use crate::openstreetmap::Openstreetmap;
 
 // The GeoAdmin geocoding provider
